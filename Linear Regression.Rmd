@@ -1,0 +1,93 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+# Linear Regression with one variable 
+### Libraries
+```{r}
+library(ggplot2)
+```
+
+### Compute Cost
+$$J(\theta) = \frac{1}{2m}\sum_{i=1}^{m} (h_{\theta}^{(i)} - y^{(i)})^{2}$$
+
+m -> number of training examples
+
+Since
+$$h(\theta) = \theta_{0} + \theta_{1}x_{1} + \theta_{2}x_{2} .......$$
+A better way to do this is to vectorize, assuming that theta is a n-dimension vector and X is a m dimensional vector
+
+The vectorized way :
+$$J(\theta) = \frac{1}{2m}sum[(X\theta - Y)^{2}]$$
+
+### Example:
+
+```{r}
+data = read.table("LRDataset.txt", header = FALSE, sep = ',')
+(data)
+```
+We have to add a 1 column to X because X_{0} = 1
+```{r}
+X <-  matrix(data$V1, ncol = 1)
+X <- cbind(1,X)
+Y <- matrix(data$V2, ncol = 1)
+m <- nrow(X)
+```
+
+Theta is a vector of theta coeficients, in this example we are assuming theta = 0 matrix
+```{r}
+theta <- matrix(0,2,1)
+```
+
+Computing the Cost Function J:
+```{r}
+costfunction <- function(X,Y,theta){
+  return((sum(((X%*%theta)-Y)**2))/(2*m))
+}
+costfunction(X,Y,theta)
+```
+
+### Gradient Descent
+```{r}
+iterations <-  1500
+alpha <-  0.01
+```
+We need to update theta until we minimize the cost function
+$$ \theta_{j} := \theta_{j} - \alpha \frac{1}{m}\sum_{i = 1}^{m}(h_{\theta}^{(i)} - y^{(i)})x_{j}^{(i)}$$
+
+```{r}
+for(i in 1:iterations){
+theta0_temp = theta[1,1] - alpha/m * sum(((X%*%theta) - Y) * X[,1])
+theta1_temp = theta[2,1] - alpha/m * sum(((X%*%theta) - Y) * X[,2])
+theta[1,1] = theta0_temp
+theta[2,1] = theta1_temp
+
+}
+```
+
+Ploting to verify
+```{r}
+f <- function(x) return(theta[1,1] + theta[2,1]*x)
+ggplot(data = data)+
+  geom_point(mapping = aes(x = V1, y = V2))+
+  stat_function(fun = f) 
+
+```
+
+
+### Normal Equation Method
+$$\theta = (X^{t}X)^{-1}(X^{t}Y)$$
+The Normal equation is a very good method because we don't need to iterate, but because of the calculus involves the inverse of a matrix, it can be very slow if the number of features is large.
+```{r}
+theta = solve(t(X)%*%X)%*%t(X)%*%Y
+```
+Ploting to verify
+```{r}
+f <- function(x) return(theta[1,1] + theta[2,1]*x)
+ggplot(data = data)+
+  geom_point(mapping = aes(x = V1, y = V2))+
+  stat_function(fun = f) 
+
+```
